@@ -39,6 +39,8 @@ export const useWebSocket = () => {
                     navigate("/game");
                     break;
                 case "START":
+                    console.log(msg.game);
+                    setGame(msg.game);
                     setGameStatus(undefined);
                     if (localPlayer === "x") {
                         setCanMove(true);

@@ -16,17 +16,16 @@ const GamePage = () => {
     const {player, game, gameStatus, winningMsg} = useGameStore();
     const navigate = useNavigate();
 
-    const startTime = new Date();
     const [time, setTime] = useState<Date>(new Date(0));
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setTime(new Date(new Date().getTime() - startTime.getTime()));
+            setTime(new Date(new Date().getTime() - new Date(game.startTime).getTime()));
         }, 1000);
         return () => {
             clearInterval(interval);
         };
-    }, []);
+    }, [gameStatus]);
 
     const onQuit = () => {
         disconnect();

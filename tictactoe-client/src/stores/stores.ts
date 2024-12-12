@@ -6,7 +6,8 @@ const exampleGame: IGame = {
     board: ["x", "", "o",
         "o", "x", "",
         "x", "o", "x"],
-    nextMoveBy: "x"
+    nextMoveBy: "x",
+    startTime: new Date(0),
 };
 
 // types

@@ -10,6 +10,7 @@ export interface IPlayer {
 export interface IGame {
     board: TBoardFieldContent[];
     nextMoveBy: "x" | "o";
+    startTime: Date;
 }
 
 export type TClientJoinMessage = {
@@ -30,6 +31,7 @@ export type TServerJoinMessage = {
 
 export type TServerStartMessage = {
     type: "START";
+    game: IGame;
 }
 
 export type TServerErrorMessage = {
