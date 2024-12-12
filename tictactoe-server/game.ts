@@ -11,7 +11,8 @@ import {WebSocket} from "ws";
 const players: IPlayer[] = [];
 let game: IGame = {
     board: ["", "", "", "", "", "", "", "", ""],
-    nextMoveBy: "x"
+    nextMoveBy: "x",
+    startTime: new Date(),
 };
 
 /**
@@ -81,7 +82,8 @@ export const onJoinGame = (ws: WebSocket) => {
 
         // 2 players --> send start message
         if (players.length === 2) {
-            broadcastMessage({type: "START"});
+            game.startTime = new Date();
+            broadcastMessage({type: "START", game: game});
         }
     } else {
         sendWebSocketMessage(ws, {
@@ -135,6 +137,7 @@ export const onGameOver = (winner: TPotentialWinner) => {
     // reset game
     game = {
         board: ["", "", "", "", "", "", "", "", ""],
-        nextMoveBy: "x"
+        nextMoveBy: "x",
+        startTime: new Date()
     }
 }

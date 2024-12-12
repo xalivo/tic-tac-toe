@@ -4,7 +4,8 @@ exports.onGameOver = exports.onMakeAMove = exports.onJoinGame = exports.broadcas
 const players = [];
 let game = {
     board: ["", "", "", "", "", "", "", "", ""],
-    nextMoveBy: "x"
+    nextMoveBy: "x",
+    startTime: new Date(),
 };
 /**
  * @returns player who won the game if someone won the game, null when nobody has won the game
@@ -67,7 +68,8 @@ const onJoinGame = (ws) => {
         });
         // 2 players --> send start message
         if (players.length === 2) {
-            (0, exports.broadcastMessage)({ type: "START" });
+            game.startTime = new Date();
+            (0, exports.broadcastMessage)({ type: "START", game: game });
         }
     }
     else {
@@ -121,7 +123,8 @@ const onGameOver = (winner) => {
     // reset game
     game = {
         board: ["", "", "", "", "", "", "", "", ""],
-        nextMoveBy: "x"
+        nextMoveBy: "x",
+        startTime: new Date()
     };
 };
 exports.onGameOver = onGameOver;
