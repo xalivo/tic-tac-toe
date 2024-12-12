@@ -28,6 +28,11 @@ type WebSocketStore = {
     setWs: (newWs: WebSocket | undefined) => void;
 }
 
+type ErrorStore = {
+    error?: string;
+    setError: (newError: string | undefined) => void;
+}
+
 // stores
 export const useGameStore = create<GameStore>((set) => ({
     game: exampleGame,
@@ -42,4 +47,8 @@ export const useGameStore = create<GameStore>((set) => ({
 
 export const useWebSocketStore = create<WebSocketStore>((set) => ({
     setWs: (newWs: WebSocket | undefined) => set({ws: newWs}),
+}));
+
+export const useErrorStore = create<ErrorStore>((set) => ({
+    setError: (newError: string | undefined) => set({error: newError}),
 }));

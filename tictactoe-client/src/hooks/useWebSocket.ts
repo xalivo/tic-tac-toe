@@ -1,4 +1,4 @@
-import {useGameStore, useWebSocketStore} from "../stores/stores.ts";
+import {useErrorStore, useGameStore, useWebSocketStore} from "../stores/stores.ts";
 import {WEBSOCKET_URL} from "../common/global-constants.ts";
 import {TClientMessage, TPlayerName, TServerMessage} from "../common/models.ts";
 import {NavigateFunction} from "react-router-dom";
@@ -6,12 +6,15 @@ import {NavigateFunction} from "react-router-dom";
 export const useWebSocket = () => {
     const {ws, setWs} = useWebSocketStore();
     const {setPlayer, setGame, setCanMove, setGameStatus, setWinningMsg} = useGameStore();
+    const {error, setError} = useErrorStore();
     let localPlayer: TPlayerName | undefined = undefined;
 
     const connect = (navigate: NavigateFunction) => {
 
-        // check whether connection is already established
-        if (ws) {
+        if (ws && error) { // check whether connection is established & error occurred
+            disconnect();
+            connect(navigate);
+        } else if (ws) { // check whether connection is already established
             return;
         }
 
@@ -23,7 +26,9 @@ export const useWebSocket = () => {
         }
 
         webSocket.onmessage = (e: MessageEvent) => {
+            setError(undefined);
             const msg = JSON.parse(e.data) as TServerMessage;
+
             switch (msg.type) {
                 case "JOIN":
                     setPlayer(msg.player);
@@ -53,7 +58,7 @@ export const useWebSocket = () => {
                     setWinningMsg(msg.msg);
                     break;
                 default: // errors
-                    console.error(msg.msg);
+                    setError(msg.msg);
                     break;
             }
         }
