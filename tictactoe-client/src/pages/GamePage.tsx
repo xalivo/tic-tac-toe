@@ -34,7 +34,7 @@ const GamePage = () => {
     }
 
     const onPlayAgain = () => {
-        send({type: "JOIN", msg: "", game: undefined});
+        send({type: "JOIN"});
         setTime(new Date(0));
     }
 

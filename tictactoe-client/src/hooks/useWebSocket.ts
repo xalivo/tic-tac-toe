@@ -1,13 +1,12 @@
 import {useGameStore, useWebSocketStore} from "../stores/stores.ts";
 import {WEBSOCKET_URL} from "../common/global-constants.ts";
-import {IGame, IMessage} from "../common/models.ts";
+import {TClientMessage, TPlayerName, TServerMessage} from "../common/models.ts";
 import {NavigateFunction} from "react-router-dom";
 
 export const useWebSocket = () => {
     const {ws, setWs} = useWebSocketStore();
     const {setPlayer, setGame, setCanMove, setGameStatus, setWinningMsg} = useGameStore();
-    // stupid solution, but works, player state does not update in onmessage function
-    let localPlayer: "o" | "x" | undefined = undefined;
+    let localPlayer: TPlayerName | undefined = undefined;
 
     const connect = (navigate: NavigateFunction) => {
 
@@ -16,28 +15,25 @@ export const useWebSocket = () => {
             return;
         }
 
-        console.log("ws undefined LOL");
         const webSocket = new WebSocket(WEBSOCKET_URL);
         setWs(webSocket);
 
         webSocket.onopen = () => {
-            console.log("do i send this?")
             webSocket.send(JSON.stringify({type: "JOIN"}));
         }
 
         webSocket.onmessage = (e: MessageEvent) => {
-            const msg = JSON.parse(e.data) as IMessage;
+            const msg = JSON.parse(e.data) as TServerMessage;
             switch (msg.type) {
                 case "JOIN":
-                    setPlayer(msg.msg as "o" | "x");
+                    setPlayer(msg.player);
+                    localPlayer = msg.player;
                     setGameStatus("WAIT");
-                    localPlayer = msg.msg as "o" | "x";
-                    setGame(msg.game as IGame);
+                    setGame(msg.game);
 
                     navigate("/game");
                     break;
                 case "START":
-                    console.log("IM AT START");
                     setGameStatus(undefined);
                     if (localPlayer === "x") {
                         setCanMove(true);
@@ -51,14 +47,12 @@ export const useWebSocket = () => {
                         }
                     }
                     break;
-                case "WIN":
-                case "LOSS":
-                case "DRAW":
+                case "GAMEOVER":
                     setCanMove(false);
-                    setGameStatus(msg.type);
+                    setGameStatus(msg.status);
                     setWinningMsg(msg.msg);
                     break;
-                default: // error handling
+                default: // errors
                     console.error(msg.msg);
                     break;
             }
@@ -70,7 +64,7 @@ export const useWebSocket = () => {
         }
     }
 
-    const send = (msg: IMessage) => {
+    const send = (msg: TClientMessage) => {
         if (ws?.readyState !== WebSocket.OPEN) {
             console.error("WebSocket is NOT connected");
             return;

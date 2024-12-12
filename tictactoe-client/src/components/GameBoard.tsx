@@ -9,13 +9,11 @@ const GameBoard = () => {
     const {send} = useWebSocket();
 
     const handleOnClickOnBoard = (index: number) => {
-        if (canMove && player) {
-            if (game.board[index] === "") {
-                const updatedBoard = game.board;
-                updatedBoard[index] = player;
-                setCanMove(false);
-                send({type: "MOVE", game: {...game, board: updatedBoard}, player: player, msg: ""});
-            }
+        if ((canMove && player) && game.board[index] === "") {
+            const updatedBoard = game.board;
+            updatedBoard[index] = player;
+            setCanMove(false);
+            send({type: "MOVE", game: {...game, board: updatedBoard}, player: player});
         }
     }
 
