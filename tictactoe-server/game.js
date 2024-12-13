@@ -125,7 +125,5 @@ const onGameOver = (game, winner) => {
             msg: "Loser hahaha! It's so joever for you!!"
         }));
     }
-    const index = games.indexOf(game);
-    console.log(index);
 };
 exports.onGameOver = onGameOver;

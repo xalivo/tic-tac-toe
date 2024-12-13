@@ -143,6 +143,4 @@ export const onGameOver = (game: IGame, winner: TPotentialWinner) => {
             msg: "Loser hahaha! It's so joever for you!!"
         }));
     }
-    const index = games.indexOf(game);
-    console.log(index);
 }
