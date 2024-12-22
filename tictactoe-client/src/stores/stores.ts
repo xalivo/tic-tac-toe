@@ -3,11 +3,13 @@ import {create} from "zustand";
 
 // default values
 const exampleGame: IGame = {
+    id: -1,
     board: ["x", "", "o",
         "o", "x", "",
         "x", "o", "x"],
     nextMoveBy: "x",
     startTime: new Date(0),
+    players: []
 };
 
 // types

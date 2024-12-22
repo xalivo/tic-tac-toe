@@ -10,9 +10,11 @@ export interface IPlayer {
 }
 
 export interface IGame {
+    id: number;
     board: TBoardFieldContent[];
     nextMoveBy: "x" | "o";
     startTime: Date;
+    players: IPlayer[];
 }
 
 export type TClientJoinMessage = {

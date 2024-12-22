@@ -8,12 +8,8 @@ import {
 } from "./common/models";
 import {WebSocket} from "ws";
 
-const players: IPlayer[] = [];
-let game: IGame = {
-    board: ["", "", "", "", "", "", "", "", ""],
-    nextMoveBy: "x",
-    startTime: new Date(),
-};
+const queue: IPlayer[] = [];
+const games: IGame[] = [];
 
 /**
  * @returns player who won the game if someone won the game, null when nobody has won the game
@@ -64,63 +60,80 @@ export const sendWebSocketMessage = (ws: WebSocket, msg: TServerMessage) => {
     ws.send(JSON.stringify(msg));
 }
 
-export const broadcastMessage = (msg: TServerMessage) => {
+export const broadcastMessage = (players: IPlayer[], msg: TServerMessage) => {
     players.forEach(x => sendWebSocketMessage(x.socket, msg));
 }
 
 export const onJoinGame = (ws: WebSocket) => {
-    // check whether there are free player spots
-    if (players.length < 2) {
-        let player: TPlayerName = players.length === 0 ? "x" : "o";
+    console.log("RUN");
+    let playerName: TPlayerName = queue.length === 0 ? "x" : "o";
+    let game: IGame = queue.length === 0 ? {
+        board: ["", "", "", "", "", "", "", "", ""],
+        nextMoveBy: "x",
+        startTime: new Date(),
+        players: [],
+        id: games.length,
+    } : games[games.length - 1];
+    let player: IPlayer = {name: playerName, socket: ws};
 
-        players.push({name: player, socket: ws});
-        sendWebSocketMessage(ws, {
-            type: "JOIN",
-            player: player,
-            game: game
-        });
+    console.log(playerName, game, player);
 
-        // 2 players --> send start message
-        if (players.length === 2) {
-            game.startTime = new Date();
-            broadcastMessage({type: "START", game: game});
-        }
-    } else {
-        sendWebSocketMessage(ws, {
-            type: "ERROR",
-            msg: "You're too late, all player spots are taken."
-        });
+    game.players.push(player);
+
+    if (queue.length === 0) {
+        console.log("PUSHED GAME");
+        games.push(game);
+    }
+
+    queue.push({name: playerName, socket: ws});
+
+    sendWebSocketMessage(ws, {
+        type: "JOIN",
+        player: playerName,
+        game: game
+    });
+
+    // 2 players --> send start message
+    if (queue.length === 2) {
+        game.startTime = new Date();
+        broadcastMessage(game.players, {type: "START", game: game});
+        queue.pop();
+        queue.pop();
+        console.log("GAME STARTED LOL");
     }
 }
 
 export const onMakeAMove = (ws: WebSocket, msg: TClientMoveMessage) => {
+    let game = games.find(x => x.id === msg.game.id);
+    console.log("MOVE");
+    console.log(game);
     // check if it's player's turn
-    if (msg.player === game.nextMoveBy) {
+    if (game && msg.player === game.nextMoveBy) {
         game.board = msg.game.board;
-        game.nextMoveBy = players.find(x => x.name !== msg.player)!.name;
+        game.nextMoveBy = game.players.find(x => x.name !== msg.player)!.name;
 
         // send move message to clients
-        broadcastMessage({type: "MOVE", game: game});
+        broadcastMessage(game.players, {type: "MOVE", game: game});
 
         // did anyone win the game??
         const winner = findGameWinner(game);
         if (winner !== null) {
-            onGameOver(winner);
+            onGameOver(game, winner);
         }
     } else {
         sendWebSocketMessage(ws, {type: "ERROR", msg: "Wait a moment...It is not your turn."});
     }
 }
 
-export const onGameOver = (winner: TPotentialWinner) => {
+export const onGameOver = (game: IGame, winner: TPotentialWinner) => {
     if (winner === "DRAW") {
-        broadcastMessage({
+        broadcastMessage(game.players, {
             type: "GAMEOVER",
             status: "DRAW",
             msg: "This game ended in a draw."
         });
     } else {
-        players.forEach(x => sendWebSocketMessage(x.socket, x.name === winner ? {
+        game.players.forEach(x => sendWebSocketMessage(x.socket, x.name === winner ? {
             type: "GAMEOVER",
             status: "WIN",
             msg: "Winner winner chicken dinner"
@@ -129,15 +142,5 @@ export const onGameOver = (winner: TPotentialWinner) => {
             status: "LOSS",
             msg: "Loser hahaha! It's so joever for you!!"
         }));
-    }
-
-    // remove all players
-    players.pop();
-    players.pop();
-    // reset game
-    game = {
-        board: ["", "", "", "", "", "", "", "", ""],
-        nextMoveBy: "x",
-        startTime: new Date()
     }
 }
